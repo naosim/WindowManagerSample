@@ -15,12 +15,12 @@
         android:layout_height="wrap_content" />
     <Button
         android:id="@+id/start"
-        android:text="start"
+        android:text="start call after 10 sec"
         android:layout_width="match_parent"
         android:layout_height="wrap_content" />
     <Button
         android:id="@+id/stop"
-        android:text="stop"
+        android:text="close"
         android:layout_width="match_parent"
         android:layout_height="wrap_content" />
 

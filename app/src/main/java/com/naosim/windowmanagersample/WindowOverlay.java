@@ -35,7 +35,7 @@ public class WindowOverlay {
 
     public void dismiss() {
         if(!isVisible) return;
-        
+
         wm.removeView(view);
         if(visibleListener != null) visibleListener.onDismiss(this);
         isVisible = false;
