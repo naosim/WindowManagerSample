@@ -44,10 +44,11 @@ public class LayerService extends Service {
         } else if("CALL_START".equals(intent.getAction())) {
             calling = true;
             onReceivedCall();
-            play();
+            playRingtone();
         } else if("CALL_END".equals(intent.getAction())) {
             calling = false;
-            stop();
+            stopRingtone();
+            vc.dismiss();
         } else if("WILL_BE_CALLED".equals(intent.getAction())) {
             new Handler().postDelayed(new Runnable() {
                 @Override
@@ -60,13 +61,13 @@ public class LayerService extends Service {
         return super.onStartCommand(intent, flags, startId);
     }
 
-    public void play() {
+    public void playRingtone() {
         Uri uri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_RINGTONE);
         ringtone = RingtoneManager.getRingtone(getApplicationContext(), uri);
         ringtone.play();
     }
 
-    public void stop() {
+    public void stopRingtone() {
         ringtone.stop();
     }
 
@@ -84,7 +85,6 @@ public class LayerService extends Service {
 
             @Override
             public void onClick(View v) {
-                vc.dismiss();
                 Action.CALL_END.start(LayerService.this);
             }
         });

@@ -3,9 +3,12 @@ package com.naosim.windowmanagersample;
 import android.app.Activity;
 import android.os.Bundle;
 import android.os.PowerManager;
+import android.util.Log;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
+
+import java.util.Date;
 
 
 public class MyActivity extends Activity {
@@ -31,14 +34,6 @@ public class MyActivity extends Activity {
 
         Window window = getWindow();
 
-        // スリープから復帰
-        PowerManager pm = (PowerManager) getSystemService(POWER_SERVICE);
-        PowerManager.WakeLock wakelock = pm.newWakeLock(PowerManager.FULL_WAKE_LOCK
-                | PowerManager.ACQUIRE_CAUSES_WAKEUP
-                | PowerManager.ON_AFTER_RELEASE, "Your App Tag");
-        wakelock.acquire();
-//                wakelock.release();
-
         // lock pattern を設定していても、
         // このアプリ起動中は画面オン時にロックはでない
         // 別のアプリやホームに移動するときにロックがでる
@@ -49,11 +44,54 @@ public class MyActivity extends Activity {
         // このアプリ起動中は画面オン時にロックはでない
         window.setFlags(WindowManager.LayoutParams.FLAG_DISMISS_KEYGUARD,
                 WindowManager.LayoutParams.FLAG_DISMISS_KEYGUARD);
+
+        // スリープから復帰
+        PowerManager pm = (PowerManager) getSystemService(POWER_SERVICE);
+        PowerManager.WakeLock wakelock = pm.newWakeLock(PowerManager.FULL_WAKE_LOCK
+                | PowerManager.ACQUIRE_CAUSES_WAKEUP
+                | PowerManager.ON_AFTER_RELEASE, "Your App Tag");
+        wakelock.acquire();
     }
 
     @Override
-    public void finish() {
-        super.finish();
-        LayerService.Action.FINISHED_PHONE_SCREEN.start(MyActivity.this);
+    protected void onStart() {
+        super.onStart();
+        Log.e("MyActivity", "onStart");
+        startDate = new Date().getTime();
+
+    }
+
+
+    long startDate;
+    @Override
+    protected void onRestart() {
+        super.onRestart();
+        Log.e("MyActivity", "onRestart");
+
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        Log.e("MyActivity", "onResume");
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        Log.e("MyActivity", "onPause");
+    }
+
+    @Override
+    protected void onStop() {
+        Log.e("MyActivity", "onStop");
+
+        // 高速終了じゃない場合
+        if(new Date().getTime() - startDate > 300) {
+            LayerService.Action.FINISHED_PHONE_SCREEN.start(MyActivity.this);
+            finish();//HOMEキーの場合でも死んでもらうため
+        }
+
+        super.onStop();
     }
 }
