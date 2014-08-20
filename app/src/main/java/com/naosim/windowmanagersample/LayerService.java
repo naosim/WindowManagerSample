@@ -1,5 +1,7 @@
 package com.naosim.windowmanagersample;
 
+import android.app.AlarmManager;
+import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
@@ -7,12 +9,14 @@ import android.graphics.PixelFormat;
 import android.media.Ringtone;
 import android.media.RingtoneManager;
 import android.net.Uri;
-import android.os.Handler;
 import android.os.IBinder;
+import android.os.PowerManager;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.WindowManager;
+
+import java.util.Calendar;
 
 /**
  * Created by fujitanao on 2014/08/18.
@@ -42,23 +46,42 @@ public class LayerService extends Service {
         if("FINISHED_PHONE_SCREEN".equals(intent.getAction())) {
             if (calling) vc.show();
         } else if("CALL_START".equals(intent.getAction())) {
-            calling = true;
-            onReceivedCall();
-            playRingtone();
+            if(!calling) {
+                // スリープから復帰
+                PowerManager pm = (PowerManager) getSystemService(POWER_SERVICE);
+                PowerManager.WakeLock wakelock = pm.newWakeLock(PowerManager.FULL_WAKE_LOCK
+                        | PowerManager.ACQUIRE_CAUSES_WAKEUP
+                        | PowerManager.ON_AFTER_RELEASE, "Your App Tag");
+                wakelock.acquire();
+
+                calling = true;
+                onReceivedCall();
+                playRingtone();
+            }
         } else if("CALL_END".equals(intent.getAction())) {
             calling = false;
             stopRingtone();
             vc.dismiss();
         } else if("WILL_BE_CALLED".equals(intent.getAction())) {
-            new Handler().postDelayed(new Runnable() {
-                @Override
-                public void run() {
-                    Action.CALL_START.start(LayerService.this);
-                }
-            }, 10000);
+            setupDelayCall();
         }
 
         return super.onStartCommand(intent, flags, startId);
+    }
+
+    public void setupDelayCall() {
+
+        Intent i = Action.CALL_START.createIntent(this);
+        PendingIntent sender = PendingIntent.getService(this, 0, i, 0);
+//        PendingIntent sender = PendingIntent.getBroadcast(this, 0, i, 0); // ブロードキャストを投げるPendingIntentの作成
+
+        Calendar calendar = Calendar.getInstance(); // Calendar取得
+        calendar.setTimeInMillis(System.currentTimeMillis()); // 現在時刻を取得
+        calendar.add(Calendar.SECOND, 10); // 現時刻より15秒後を設定
+
+        AlarmManager am = (AlarmManager)getSystemService(ALARM_SERVICE); // AlramManager取得
+        am.set(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(), sender); // AlramManagerにPendingIntentを登録
+
     }
 
     public void playRingtone() {
