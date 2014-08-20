@@ -13,6 +13,8 @@ import java.util.Date;
 
 public class MyActivity extends Activity {
 
+    private PowerManager.WakeLock wakelock;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -46,7 +48,7 @@ public class MyActivity extends Activity {
                 WindowManager.LayoutParams.FLAG_DISMISS_KEYGUARD);
 
         PowerManager pm = (PowerManager) getSystemService(POWER_SERVICE);
-        PowerManager.WakeLock wakelock = pm.newWakeLock(PowerManager.FULL_WAKE_LOCK
+        wakelock = pm.newWakeLock(PowerManager.FULL_WAKE_LOCK
                 | PowerManager.ACQUIRE_CAUSES_WAKEUP
                 | PowerManager.ON_AFTER_RELEASE, "Your App Tag");
         wakelock.acquire();
@@ -92,5 +94,11 @@ public class MyActivity extends Activity {
         }
 
         super.onStop();
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        wakelock.release();
     }
 }
